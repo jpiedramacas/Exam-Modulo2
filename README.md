@@ -19,7 +19,7 @@
    - Tenemos que tener el `archivo.pem` de nuestro EC2 en Cloud9
      
      ```sh
-     chmod 400 your-key.pem
+     chmod 400 archivo.pem
      ssh -i archivo.pem ec2-user@107.23.249.63
      ```
 
