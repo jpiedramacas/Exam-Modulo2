@@ -117,7 +117,7 @@ if __name__ == '__main__':
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario</title>
+    <title>My Formulario 002</title>
     <style>
         body {
             display: flex;
@@ -125,6 +125,7 @@ if __name__ == '__main__':
             align-items: center;
             height: 100vh;
             flex-direction: column;
+            font-family: Arial, sans-serif;
         }
         form {
             text-align: center;
@@ -136,6 +137,17 @@ if __name__ == '__main__':
         }
         input {
             margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -153,6 +165,7 @@ if __name__ == '__main__':
     </form>
 </body>
 </html>
+
 ```
 
 La estructura debe ser algo asi, usamos el comando `tree`
