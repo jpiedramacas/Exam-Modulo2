@@ -1,236 +1,220 @@
-[EXAMEN](https://github.com/jpiedramacas/Modulo2/blob/main/Examen_Practico%20_Modulo2.docx)
+# README: Desarrollo de Aplicación Web con Flask en AWS
 
+## Tabla de Contenidos
+1. [Introducción](#introducción)
+2. [Requisitos Previos](#requisitos-previos)
+3. [Configuración del Entorno de Desarrollo](#configuración-del-entorno-de-desarrollo)
+4. [Desarrollo de la Aplicación Web](#desarrollo-de-la-aplicación-web)
+5. [Pruebas y Depuración](#pruebas-y-depuración)
+6. [Distribución y Documentación](#distribución-y-documentación)
+7. [Entrega](#entrega)
 
-### Paso 1: Configuración de una Instancia EC2 en AWS con Amazon Linux
+## Introducción
+Este documento proporciona instrucciones paso a paso para configurar un entorno de desarrollo, desarrollar una aplicación web utilizando Flask, probar y depurar la aplicación, y preparar la aplicación para su distribución. El entorno se configura en una instancia EC2 de AWS, y se utiliza Python, Git y el IDE Cloud9.
 
-1. **Crear una instancia EC2**:
-   - Ve a `Servicios > EC2` y selecciona `Lanzar instancia`.
-   - Elige la AMI de `Amazon Linux 2`.
-   - Selecciona el tipo de instancia, `t2.micro`
-   - Crea un nuevo par de claves o usa uno existente y guarda el archivo `.pem`.
-   - Configura el almacenamiento predeterminado y haz clic en `Revisar y lanzar`.
+## Requisitos Previos
+Antes de comenzar, asegúrate de tener:
+- Una cuenta activa de AWS.
+- Conocimientos básicos de Python y Git.
+- Permisos para crear instancias EC2 y recursos relacionados en AWS.
 
-2. **Configurar grupos de seguridad**:
-   - En `EC2 > Grupos de seguridad`.
-   - Selecciona el grupo de seguridad asociado a tu instancia.
-   - Añade una regla de entrada para permitir el tráfico puerto 8080 y el puerto 5000.
-   - RDS Puerto: 3306, Motor MySQL
+## Configuración del Entorno de Desarrollo
 
-3. **Conectar a la instancia EC2**:
-   - Desde un Cloud9 nos conectamos a nuestro EC2
-   - Tenemos que tener el `archivo.pem` de nuestro EC2 en Cloud9
-     
-     ```sh
-     chmod 400 archivo.pem
-     ssh -i archivo.pem ec2-user@107.23.249.63
-     ```
+### 1. Crear una Instancia EC2
+1. Inicia sesión en AWS Management Console.
+2. Navega a **EC2 Dashboard** y selecciona **Launch Instance**.
+3. Selecciona **Amazon Linux 2 AMI**.
+4. Elige el tipo de instancia (t2.micro es suficiente para este ejercicio).
+5. Configura los detalles de la instancia y el almacenamiento.
+6. Configura el grupo de seguridad para permitir tráfico SSH (puerto 22) y HTTP (puerto 80).
+7. Revisa y lanza la instancia.
 
-### Paso 2: Instalación y Configuración de Herramientas de Desarrollo
+### 2. Conectarse a la Instancia EC2
+1. Conéctate a la instancia usando SSH:
+    ```sh
+    ssh -i "ruta/a/tu/clave.pem" ec2-user@<tu-instancia-public-ip>
+    ```
 
-1. **Actualizar el sistema**:
-   ```sh
-   sudo yum update 
-   ```
+### 3. Instalar Python y Git
+1. Actualiza el paquete de la lista:
+    ```sh
+    sudo yum update -y
+    ```
+2. Instala Python y Git:
+    ```sh
+    sudo yum install python3 git -y
+    ```
 
-2. **Instalar Python**:
-   ```sh
-   sudo yum install python3 -y
-   ```
+### 4. Configurar Cloud9
+1. En AWS Management Console, navega a **Cloud9** y crea un nuevo entorno.
+2. Asocia el entorno Cloud9 con tu instancia EC2.
 
-3. **Instalar pip**:
-   ```sh
-   sudo yum install python3-pip -y
-   ```
+### 5. Configurar Seguridad
+1. Configura las reglas del grupo de seguridad de la instancia para permitir solo los puertos necesarios (ej. 22 para SSH, 80 para HTTP).
 
-## Sección 2: Desarrollo de la Aplicación Web
+## Desarrollo de la Aplicación Web
 
-### Paso 1: Creación de la Aplicación Web con Flask
+### 1. Crear una Aplicación Flask Básica
+1. Crea un entorno virtual:
+    ```sh
+    python3 -m venv myenv
+    source myenv/bin/activate
+    ```
+2. Instala Flask:
+    ```sh
+    pip install Flask
+    ```
+3. Crea el archivo `app.py`:
+    ```python
+    from flask import Flask, request, render_template
 
-1. **Instalar Flask**:
-   ```sh
-   pip3 install Flask
-   ```
+    app = Flask(__name__)
 
-2. **Crear la estructura del proyecto**:
-   ```sh
-   mkdir my_flask_app
-   cd my_flask_app
-   ```
+    @app.route('/')
+    def home():
+        return "Hola, mundo!"
 
-3. **Crear los archivos**
+    @app.route('/form', methods=['GET', 'POST'])
+    def form():
+        if request.method == 'POST':
+            nombre = request.form['nombre']
+            return f"Hola, {nombre}!"
+        return '''
+            <form method="post">
+                Nombre: <input type="text" name="nombre"><br>
+                <input type="submit" value="Enviar">
+            </form>
+        '''
 
-Entiendo, parece que estás teniendo problemas con el código. Vamos a corregirlo y asegurarnos de que todo esté en orden. Aquí tienes los códigos actualizados:
+    if __name__ == '__main__':
+        app.run(host='0.0.0.0', port=80)
+    ```
+4. Ejecuta la aplicación:
+    ```sh
+    python app.py
+    ```
 
-### Código de `app.py`:
+### 2. Configurar Base de Datos (RDS)
+1. En AWS Management Console, navega a **RDS** y crea una nueva base de datos MySQL.
+2. Conéctate a la base de datos desde tu instancia EC2 e inicializa la base de datos.
 
-```python
-from flask import Flask, render_template, request
+### 3. Integrar la Base de Datos en Flask
+1. Instala `pymysql`:
+    ```sh
+    pip install pymysql
+    ```
+2. Modifica `app.py` para registrar datos en la base de datos:
+    ```python
+    import pymysql
 
-app = Flask(__name__)
+    connection = pymysql.connect(host='tu-rds-endpoint',
+                                 user='tu-usuario',
+                                 password='tu-contraseña',
+                                 db='tu-base-de-datos')
 
-@app.route('/')
-def presentacion():
-    return render_template('presentacion.html')
+    @app.route('/form', methods=['GET', 'POST'])
+    def form():
+        if request.method == 'POST':
+            nombre = request.form['nombre']
+            with connection.cursor() as cursor:
+                sql = "INSERT INTO usuarios (nombre) VALUES (%s)"
+                cursor.execute(sql, (nombre,))
+                connection.commit()
+            return f"Hola, {nombre}!"
+        return '''
+            <form method="post">
+                Nombre: <input type="text" name="nombre"><br>
+                <input type="submit" value="Enviar">
+            </form>
+        '''
+    ```
 
-@app.route('/formulario', methods=['GET', 'POST'])
-def formulario():
-    if request.method == 'POST':
-        nombre = request.form['nombre']
-        apellido = request.form['apellido']
-        edad = request.form['edad']
-        altura = request.form['altura']
-        return f'Nombre: {nombre}, Apellido: {apellido}, Edad: {edad}, Altura: {altura}'
-    return render_template('formulario.html')
+### 4. Integrar Control de Versiones
+1. Inicializa un repositorio Git:
+    ```sh
+    git init
+    ```
+2. Añade los archivos al repositorio:
+    ```sh
+    git add .
+    ```
+3. Realiza un commit inicial:
+    ```sh
+    git commit -m "Initial commit"
+    ```
+4. Conecta el repositorio local con un repositorio remoto en GitHub:
+    ```sh
+    git remote add origin <url-del-repositorio-git>
+    git push -u origin master
+    ```
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
-```
+## Pruebas y Depuración
 
-### Código de `presentacion.html`:
+### 1. Desarrollar Casos de Prueba
+1. Crea el archivo `test_app.py`:
+    ```python
+    import unittest
+    from app import app
 
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examen del Modulo 2</title>
-    <style>
-        body {
-            text-align: center;
-            padding: 50px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Bienvenido</h1>
-    <p>Para este examen 04/06/2024 es para mostrar el uso de Flask.</p>
-    <p>Haga clic en el botón para ir al formulario:</p>
-    <a href="/formulario"><button>Ir al Formulario</button></a>
-</body>
-</html>
-```
+    class FlaskTestCase(unittest.TestCase):
 
-### Código de `formulario.html`:
+        def test_home(self):
+            tester = app.test_client(self)
+            response = tester.get('/')
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Hola, mundo!', response.data)
 
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Formulario 002</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-            font-family: Arial, sans-serif;
-        }
-        form {
-            text-align: center;
-            margin-top: 20px;
-        }
-        label {
-            margin-bottom: 10px;
-            display: block;
-        }
-        input {
-            margin-bottom: 10px;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <form method="POST" action="/formulario">
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" name="nombre" required><br>
-        <label for="apellido">Apellido:</label>
-        <input type="text" id="apellido" name="apellido" required><br>
-        <label for="edad">Edad:</label>
-        <input type="number" id="edad" name="edad" required><br>
-        <label for="altura">Altura:</label>
-        <input type="number" id="altura" name="altura" required><br>
-        <button type="submit">Enviar</button>
-    </form>
-</body>
-</html>
+        def test_form_get(self):
+            tester = app.test_client(self)
+            response = tester.get('/form')
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Nombre:', response.data)
 
-```
+    if __name__ == '__main__':
+        unittest.main()
+    ```
 
-La estructura debe ser algo asi, usamos el comando `tree`
+### 2. Ejecutar Pruebas
+1. Ejecuta las pruebas:
+    ```sh
+    python test_app.py
+    ```
 
-```
-.
-├── app.py
-└── templates
-    ├── formulario.html
-    └── presentacion.html
-```
+### 3. Depurar la Aplicación
+1. Usa `print` para depurar el código si es necesario.
 
+## Distribución y Documentación
 
-5. **Ejecutar la aplicación**:
-   ```sh
-   sudo python3 app.py
-   ```
+### 1. Preparar para la Distribución
+1. Crea un archivo `requirements.txt`:
+    ```sh
+    pip freeze > requirements.txt
+    ```
+2. Crea un script de despliegue (`deploy.sh`):
+    ```sh
+    #!/bin/bash
+    source myenv/bin/activate
+    pip install -r requirements.txt
+    python app.py
+    ```
 
-   ```sh
-   http://localhost:8080/
-   ```
+### 2. Documentación Técnica
+1. Documenta la aplicación, el diseño y la estructura de archivos en un archivo `README.md`.
 
-## Sección 3: Pruebas y Depuración
+## Entrega
 
-### Paso 1: Desarrollo de Casos de Prueba
+1. Crea un repositorio en GitHub.
+2. Agrega y sube los archivos al repositorio:
+    ```sh
+    git init
+    git add .
+    git commit -m "Initial commit"
+    git remote add origin <url-de-tu-repositorio>
+    git push -u origin master
+    ```
+3. Pega el enlace del repositorio en la entrega del examen.
 
-1. **Crear el archivo `test_app.py`**:
-   ```python
-   import unittest
-   from app import app
-
-   class TestApp(unittest.TestCase):
-
-    def setUp(self):
-        # Configurar la aplicación antes de cada prueba
-        self.app = app.test_client()
-        self.app.testing = True
-
-    def test_presentacion(self):
-        # Probar la página de presentación
-        response = self.app.get('/')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Bienvenido', response.data)
-
-    def test_formulario(self):
-        # Probar el formulario
-        response = self.app.post('/formulario', data=dict(nombre='John', apellido='Doe', edad='30', altura='180'))
-        self.assertIn(b'Nombre: John, Apellido: Doe, Edad: 30, Altura: 180', response.data)
-
-    def test_ruta_invalida(self):
-        # Probar una ruta no válida
-        response = self.app.get('/ruta_invalida')
-        self.assertEqual(response.status_code, 404)
-
-   if __name__ == '__main__':
-    unittest.main()
-
-   ```
-
-### Paso 2: Ejecución de Pruebas
-
-1. **Ejecutar las pruebas**:
-   ```sh
-   python3 test_app.py
-   ```
-
+### Notas Adicionales
+- Asegúrate de que tu base de datos RDS esté configurada para permitir conexiones desde la IP de tu instancia EC2.
+- Añade configuraciones de seguridad adicionales según las mejores prácticas de AWS para proteger tu aplicación y base de datos.
+- Incluye instrucciones claras en el README sobre cómo clonar y ejecutar tu proyecto para que otros desarrolladores puedan replicar tu entorno fácilmente.
