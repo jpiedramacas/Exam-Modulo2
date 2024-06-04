@@ -272,9 +272,7 @@
         ```sh
         python app.py
         ```
-    2. Visita la aplicación en tu navegador en `http://<tu-instancia
-
--public-ip>:8080/`.
+    2. Visita la aplicación en tu navegador en `http://<tu-instancia-public-ip>:8080/`.
 
     ## Pruebas
     1. Ejecuta los casos de prueba:
