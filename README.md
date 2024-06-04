@@ -1,41 +1,37 @@
-# README: Desarrollo de Aplicación Web con Flask en AWS
+# Desarrollo de Aplicación Web con Flask en AWS
 
 ## Tabla de Contenidos
-1. [Introducción](#introducción)
-2. [Requisitos Previos](#requisitos-previos)
-3. [Configuración del Entorno de Desarrollo](#configuración-del-entorno-de-desarrollo)
-4. [Desarrollo de la Aplicación Web](#desarrollo-de-la-aplicación-web)
-5. [Pruebas y Depuración](#pruebas-y-depuración)
-6. [Distribución y Documentación](#distribución-y-documentación)
-7. [Entrega](#entrega)
+1. [Configuración del Entorno de Desarrollo](#1-configuración-del-entorno-de-desarrollo)
+2. [Desarrollo de la Aplicación Web](#2-desarrollo-de-la-aplicación-web)
+3. [Pruebas y Depuración](#3-pruebas-y-depuración)
+4. [Distribución y Documentación](#4-distribución-y-documentación)
+5. [Entrega](#entrega)
 
-## Introducción
-Este documento proporciona instrucciones paso a paso para configurar un entorno de desarrollo, desarrollar una aplicación web utilizando Flask, probar y depurar la aplicación, y preparar la aplicación para su distribución. El entorno se configura en una instancia EC2 de AWS, y se utiliza Python, Git y el IDE Cloud9.
+## 1. Configuración del Entorno de Desarrollo
 
-## Requisitos Previos
-Antes de comenzar, asegúrate de tener:
-- Una cuenta activa de AWS.
-- Conocimientos básicos de Python y Git.
-- Permisos para crear instancias EC2 y recursos relacionados en AWS.
-
-## Configuración del Entorno de Desarrollo
-
-### 1. Crear una Instancia EC2
+### 1.1 Crear una Instancia EC2
 1. Inicia sesión en AWS Management Console.
 2. Navega a **EC2 Dashboard** y selecciona **Launch Instance**.
 3. Selecciona **Amazon Linux 2 AMI**.
 4. Elige el tipo de instancia (t2.micro es suficiente para este ejercicio).
 5. Configura los detalles de la instancia y el almacenamiento.
-6. Configura el grupo de seguridad para permitir tráfico SSH (puerto 22) y HTTP (puerto 80).
+    - En **Instance Details**, puedes usar los valores predeterminados.
+    - En **Add Storage**, puedes usar el almacenamiento predeterminado.
+6. Configura el grupo de seguridad para permitir tráfico SSH (puerto 22) y HTTP (puerto 80):
+    - Crea un nuevo grupo de seguridad.
+    - Añade una regla para SSH con el puerto 22 y origen "My IP".
+    - Añade una regla para HTTP con el puerto 80 y origen "Anywhere".
 7. Revisa y lanza la instancia.
+8. Descarga el archivo PEM para la clave SSH y guarda en un lugar seguro.
 
-### 2. Conectarse a la Instancia EC2
-1. Conéctate a la instancia usando SSH:
+### 1.2 Conectarse a la Instancia EC2
+1. Abre una terminal y navega a la ubicación donde guardaste el archivo PEM.
+2. Conéctate a la instancia usando SSH:
     ```sh
     ssh -i "ruta/a/tu/clave.pem" ec2-user@<tu-instancia-public-ip>
     ```
 
-### 3. Instalar Python y Git
+### 1.3 Instalar Python y Git
 1. Actualiza el paquete de la lista:
     ```sh
     sudo yum update -y
@@ -44,17 +40,30 @@ Antes de comenzar, asegúrate de tener:
     ```sh
     sudo yum install python3 git -y
     ```
+3. Verifica las instalaciones:
+    ```sh
+    python3 --version
+    git --version
+    ```
 
-### 4. Configurar Cloud9
+### 1.4 Configurar Cloud9
 1. En AWS Management Console, navega a **Cloud9** y crea un nuevo entorno.
-2. Asocia el entorno Cloud9 con tu instancia EC2.
+2. Configura el entorno para que se asocie con la instancia EC2 que creaste.
+    - Selecciona **Create Environment**.
+    - Proporciona un nombre y una descripción.
+    - Elige **Connect with EC2** y selecciona la instancia EC2 que creaste.
+3. Completa la configuración y abre el entorno Cloud9.
+4. Configura el entorno para usar Python 3 por defecto:
+    ```sh
+    sudo alternatives --set python /usr/bin/python3
+    ```
 
-### 5. Configurar Seguridad
+### 1.5 Configurar Seguridad
 1. Configura las reglas del grupo de seguridad de la instancia para permitir solo los puertos necesarios (ej. 22 para SSH, 80 para HTTP).
 
-## Desarrollo de la Aplicación Web
+## 2. Desarrollo de la Aplicación Web
 
-### 1. Crear una Aplicación Flask Básica
+### 2.1 Crear una Aplicación Flask Básica
 1. Crea un entorno virtual:
     ```sh
     python3 -m venv myenv
@@ -93,12 +102,21 @@ Antes de comenzar, asegúrate de tener:
     ```sh
     python app.py
     ```
+5. Visita la aplicación en tu navegador utilizando la IP pública de tu instancia EC2.
 
-### 2. Configurar Base de Datos (RDS)
+### 2.2 Configurar Base de Datos (RDS)
 1. En AWS Management Console, navega a **RDS** y crea una nueva base de datos MySQL.
-2. Conéctate a la base de datos desde tu instancia EC2 e inicializa la base de datos.
+2. Configura la base de datos con los siguientes detalles:
+    - Engine type: MySQL.
+    - Template: Free tier.
+    - DB instance identifier: mydatabase.
+    - Master username: admin.
+    - Master password: <tu-contraseña>.
+3. En **Additional configuration**, configura el nombre de la base de datos inicial.
+4. Lanza la instancia de base de datos.
+5. Asegúrate de que el grupo de seguridad de la base de datos permita conexiones desde la IP de tu instancia EC2.
 
-### 3. Integrar la Base de Datos en Flask
+### 2.3 Integrar la Base de Datos en Flask
 1. Instala `pymysql`:
     ```sh
     pip install pymysql
@@ -128,8 +146,9 @@ Antes de comenzar, asegúrate de tener:
             </form>
         '''
     ```
+3. Ejecuta la aplicación y verifica que los datos se registren en la base de datos.
 
-### 4. Integrar Control de Versiones
+### 2.4 Integrar Control de Versiones
 1. Inicializa un repositorio Git:
     ```sh
     git init
@@ -148,9 +167,9 @@ Antes de comenzar, asegúrate de tener:
     git push -u origin master
     ```
 
-## Pruebas y Depuración
+## 3. Pruebas y Depuración
 
-### 1. Desarrollar Casos de Prueba
+### 3.1 Desarrollar Casos de Prueba
 1. Crea el archivo `test_app.py`:
     ```python
     import unittest
@@ -174,18 +193,22 @@ Antes de comenzar, asegúrate de tener:
         unittest.main()
     ```
 
-### 2. Ejecutar Pruebas
+### 3.2 Ejecutar Pruebas
 1. Ejecuta las pruebas:
     ```sh
     python test_app.py
     ```
 
-### 3. Depurar la Aplicación
+### 3.3 Depurar la Aplicación
 1. Usa `print` para depurar el código si es necesario.
+    ```python
+    print("Valor de la variable:", variable)
+    ```
+2. Verifica los logs para identificar y corregir errores.
 
-## Distribución y Documentación
+## 4. Distribución y Documentación
 
-### 1. Preparar para la Distribución
+### 4.1 Preparar para la Distribución
 1. Crea un archivo `requirements.txt`:
     ```sh
     pip freeze > requirements.txt
@@ -198,8 +221,65 @@ Antes de comenzar, asegúrate de tener:
     python app.py
     ```
 
-### 2. Documentación Técnica
+### 4.2 Documentación Técnica
 1. Documenta la aplicación, el diseño y la estructura de archivos en un archivo `README.md`.
+2. Incluye instrucciones claras sobre cómo clonar y ejecutar el proyecto.
+
+### 4.3 Ejemplo de Documentación Técnica
+```markdown
+# Aplicación Flask
+
+## Descripción
+Esta es una aplicación web simple construida con Flask. Incluye una ruta para mostrar un mensaje de bienvenida y un formulario para ingresar un nombre y registrar ese nombre en una base de datos MySQL.
+
+## Requisitos
+- Python 3
+- Flask
+- PyMySQL
+
+## Instalación
+1. Clona el repositorio:
+    ```sh
+    git clone <url-del-repositorio>
+    cd <nombre-del-repositorio>
+    ```
+2. Crea y activa un entorno virtual:
+    ```sh
+    python3 -m venv myenv
+    source myenv/bin/activate
+    ```
+3. Instala las dependencias:
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+## Ejecución
+1. Ejecuta la aplicación:
+    ```sh
+   
+
+ python app.py
+    ```
+2. Visita la aplicación en tu navegador en `http://<tu-instancia-public-ip>`.
+
+## Pruebas
+1. Ejecuta los casos de prueba:
+    ```sh
+    python test_app.py
+    ```
+
+## Despliegue
+1. Usa el script de despliegue para preparar el entorno:
+    ```sh
+    ./deploy.sh
+    ```
+
+## Contribución
+1. Crea una rama para tu característica (`git checkout -b feature/nueva-caracteristica`).
+2. Haz commit de tus cambios (`git commit -am 'Añadir nueva característica'`).
+3. Empuja la rama (`git push origin feature/nueva-caracteristica`).
+4. Abre un Pull Request.
+```
 
 ## Entrega
 
