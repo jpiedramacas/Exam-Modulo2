@@ -10,210 +10,226 @@
 ## 1. Configuración del Entorno de Desarrollo
 
 ### 1.1 Crear una Instancia EC2
-1. Inicia sesión en AWS Management Console.
-2. Navega a **EC2 Dashboard** y selecciona **Launch Instance**.
-3. Selecciona **Amazon Linux 2 AMI**.
-4. Elige el tipo de instancia (t2.micro es suficiente para este ejercicio).
-5. Configura los detalles de la instancia y el almacenamiento.
-    - En **Instance Details**, puedes usar los valores predeterminados.
-    - En **Add Storage**, puedes usar el almacenamiento predeterminado.
-6. Configura el grupo de seguridad para permitir tráfico SSH (puerto 22) y HTTP (puerto 80):
-    - Crea un nuevo grupo de seguridad.
-    - Añade una regla para SSH con el puerto 22 y origen "My IP".
-    - Añade una regla para HTTP con el puerto 80 y origen "Anywhere".
-7. Revisa y lanza la instancia.
-8. Descarga el archivo PEM para la clave SSH y guarda en un lugar seguro.
+
+1. **Crear una instancia EC2:**
+    - Ve a **Servicios > EC2** y selecciona **Lanzar instancia**.
+    - Elige la AMI de **Amazon Linux 2**.
+    - Selecciona el tipo de instancia, **t2.micro**.
+    - Crea un nuevo par de claves o usa uno existente y guarda el archivo `.pem`.
+    - Configura el almacenamiento predeterminado y haz clic en **Revisar y lanzar**.
+
+2. **Configurar grupos de seguridad:**
+    - En **EC2 > Grupos de seguridad**.
+    - Selecciona el grupo de seguridad asociado a tu instancia.
+    - Añade una regla de entrada para permitir el tráfico en los puertos 8080, 5000 y 3306 (MySQL).
 
 ### 1.2 Conectarse a la Instancia EC2
-1. Abre una terminal y navega a la ubicación donde guardaste el archivo PEM.
-2. Conéctate a la instancia usando SSH:
-    ```sh
-    ssh -i "ruta/a/tu/clave.pem" ec2-user@<tu-instancia-public-ip>
-    ```
 
-### 1.3 Instalar Python y Git
-1. Actualiza el paquete de la lista:
+1. **Desde un Cloud9 nos conectamos a nuestro EC2:**
+    - Tenemos que tener el archivo `.pem` de nuestro EC2 en Cloud9.
+    - Conéctate a la instancia usando SSH:
+        ```sh
+        chmod 400 archivo.pem
+        ssh -i archivo.pem ec2-user@<tu-instancia-public-ip>
+        ```
+
+### 1.3 Instalar Python y Herramientas de Desarrollo
+
+1. **Actualizar el sistema:**
     ```sh
     sudo yum update -y
     ```
-2. Instala Python y Git:
-    ```sh
-    sudo yum install python3 git -y
-    ```
-3. Verifica las instalaciones:
-    ```sh
-    python3 --version
-    git --version
-    ```
 
-### 1.4 Configurar Cloud9
-1. En AWS Management Console, navega a **Cloud9** y crea un nuevo entorno.
-2. Configura el entorno para que se asocie con la instancia EC2 que creaste.
-    - Selecciona **Create Environment**.
-    - Proporciona un nombre y una descripción.
-    - Elige **Connect with EC2** y selecciona la instancia EC2 que creaste.
-3. Completa la configuración y abre el entorno Cloud9.
-4. Configura el entorno para usar Python 3 por defecto:
+2. **Instalar Python y pip:**
     ```sh
-    sudo alternatives --set python /usr/bin/python3
+    sudo yum install python3 -y
+    sudo yum install python3-pip -y
     ```
-
-### 1.5 Configurar Seguridad
-1. Configura las reglas del grupo de seguridad de la instancia para permitir solo los puertos necesarios (ej. 22 para SSH, 80 para HTTP).
 
 ## 2. Desarrollo de la Aplicación Web
 
-### 2.1 Crear una Aplicación Flask Básica
-1. Crea un entorno virtual:
+### 2.1 Instalación y Configuración de Flask
+
+1. **Instalar Flask:**
     ```sh
-    python3 -m venv myenv
-    source myenv/bin/activate
+    pip3 install Flask
     ```
-2. Instala Flask:
+
+2. **Crear la estructura del proyecto:**
     ```sh
-    pip install Flask
+    mkdir my_flask_app
+    cd my_flask_app
+    mkdir templates
     ```
-3. Crea el archivo `app.py`:
+
+3. **Crear el archivo `app.py`:**
     ```python
-    from flask import Flask, request, render_template
+    from flask import Flask, render_template, request
 
     app = Flask(__name__)
 
     @app.route('/')
-    def home():
-        return "Hola, mundo!"
+    def presentacion():
+        return render_template('presentacion.html')
 
-    @app.route('/form', methods=['GET', 'POST'])
-    def form():
+    @app.route('/formulario', methods=['GET', 'POST'])
+    def formulario():
         if request.method == 'POST':
             nombre = request.form['nombre']
-            return f"Hola, {nombre}!"
-        return '''
-            <form method="post">
-                Nombre: <input type="text" name="nombre"><br>
-                <input type="submit" value="Enviar">
-            </form>
-        '''
+            apellido = request.form['apellido']
+            edad = request.form['edad']
+            altura = request.form['altura']
+            return f'Nombre: {nombre}, Apellido: {apellido}, Edad: {edad}, Altura: {altura}'
+        return render_template('formulario.html')
 
     if __name__ == '__main__':
-        app.run(host='0.0.0.0', port=80)
+        app.run(host='0.0.0.0', port=8080, debug=True)
     ```
-4. Ejecuta la aplicación:
-    ```sh
-    python app.py
-    ```
-5. Visita la aplicación en tu navegador utilizando la IP pública de tu instancia EC2.
 
-### 2.2 Configurar Base de Datos (RDS)
-1. En AWS Management Console, navega a **RDS** y crea una nueva base de datos MySQL.
-2. Configura la base de datos con los siguientes detalles:
-    - Engine type: MySQL.
-    - Template: Free tier.
-    - DB instance identifier: mydatabase.
-    - Master username: admin.
-    - Master password: <tu-contraseña>.
-3. En **Additional configuration**, configura el nombre de la base de datos inicial.
-4. Lanza la instancia de base de datos.
-5. Asegúrate de que el grupo de seguridad de la base de datos permita conexiones desde la IP de tu instancia EC2.
+4. **Crear la plantilla `presentacion.html`:**
+    ```html
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Examen del Modulo 2</title>
+        <style>
+            body {
+                text-align: center;
+                padding: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Bienvenido</h1>
+        <p>Para este examen 04/06/2024 es para mostrar el uso de Flask.</p>
+        <p>Haga clic en el botón para ir al formulario:</p>
+        <a href="/formulario"><button>Ir al Formulario</button></a>
+    </body>
+    </html>
+    ```
 
-### 2.3 Integrar la Base de Datos en Flask
-1. Instala `pymysql`:
-    ```sh
-    pip install pymysql
+5. **Crear la plantilla `formulario.html`:**
+    ```html
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>My Formulario 002</title>
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                flex-direction: column;
+                font-family: Arial, sans-serif;
+            }
+            form {
+                text-align: center;
+                margin-top: 20px;
+            }
+            label {
+                margin-bottom: 10px;
+                display: block;
+            }
+            input {
+                margin-bottom: 10px;
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            button {
+                background-color: #007bff;
+                color: #fff;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <form method="POST" action="/formulario">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required><br>
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido" required><br>
+            <label for="edad">Edad:</label>
+            <input type="number" id="edad" name="edad" required><br>
+            <label for="altura">Altura:</label>
+            <input type="number" id="altura" name="altura" required><br>
+            <button type="submit">Enviar</button>
+        </form>
+    </body>
+    </html>
     ```
-2. Modifica `app.py` para registrar datos en la base de datos:
-    ```python
-    import pymysql
 
-    connection = pymysql.connect(host='tu-rds-endpoint',
-                                 user='tu-usuario',
-                                 password='tu-contraseña',
-                                 db='tu-base-de-datos')
+### 2.2 Ejecutar la Aplicación
 
-    @app.route('/form', methods=['GET', 'POST'])
-    def form():
-        if request.method == 'POST':
-            nombre = request.form['nombre']
-            with connection.cursor() as cursor:
-                sql = "INSERT INTO usuarios (nombre) VALUES (%s)"
-                cursor.execute(sql, (nombre,))
-                connection.commit()
-            return f"Hola, {nombre}!"
-        return '''
-            <form method="post">
-                Nombre: <input type="text" name="nombre"><br>
-                <input type="submit" value="Enviar">
-            </form>
-        '''
+1. **Ejecutar la aplicación:**
+    ```sh
+    sudo python3 app.py
     ```
-3. Ejecuta la aplicación y verifica que los datos se registren en la base de datos.
 
-### 2.4 Integrar Control de Versiones
-1. Inicializa un repositorio Git:
-    ```sh
-    git init
-    ```
-2. Añade los archivos al repositorio:
-    ```sh
-    git add .
-    ```
-3. Realiza un commit inicial:
-    ```sh
-    git commit -m "Initial commit"
-    ```
-4. Conecta el repositorio local con un repositorio remoto en GitHub:
-    ```sh
-    git remote add origin <url-del-repositorio-git>
-    git push -u origin master
-    ```
+2. **Visitar la aplicación en tu navegador:**
+    - Abre tu navegador y visita `http://<tu-instancia-public-ip>:8080/`.
 
 ## 3. Pruebas y Depuración
 
-### 3.1 Desarrollar Casos de Prueba
-1. Crea el archivo `test_app.py`:
+### 3.1 Desarrollo de Casos de Prueba
+
+1. **Crear el archivo `test_app.py`:**
     ```python
     import unittest
     from app import app
 
-    class FlaskTestCase(unittest.TestCase):
+    class TestApp(unittest.TestCase):
 
-        def test_home(self):
-            tester = app.test_client(self)
-            response = tester.get('/')
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b'Hola, mundo!', response.data)
+        def setUp(self):
+            # Configurar la aplicación antes de cada prueba
+            self.app = app.test_client()
+            self.app.testing = True
 
-        def test_form_get(self):
-            tester = app.test_client(self)
-            response = tester.get('/form')
+        def test_presentacion(self):
+            # Probar la página de presentación
+            response = self.app.get('/')
             self.assertEqual(response.status_code, 200)
-            self.assertIn(b'Nombre:', response.data)
+            self.assertIn(b'Bienvenido', response.data)
+
+        def test_formulario(self):
+            # Probar el formulario
+            response = self.app.post('/formulario', data=dict(nombre='John', apellido='Doe', edad='30', altura='180'))
+            self.assertIn(b'Nombre: John, Apellido: Doe, Edad: 30, Altura: 180', response.data)
+
+        def test_ruta_invalida(self):
+            # Probar una ruta no válida
+            response = self.app.get('/ruta_invalida')
+            self.assertEqual(response.status_code, 404)
 
     if __name__ == '__main__':
         unittest.main()
     ```
 
-### 3.2 Ejecutar Pruebas
-1. Ejecuta las pruebas:
-    ```sh
-    python test_app.py
-    ```
+### 3.2 Ejecución de Pruebas
 
-### 3.3 Depurar la Aplicación
-1. Usa `print` para depurar el código si es necesario.
-    ```python
-    print("Valor de la variable:", variable)
+1. **Ejecutar las pruebas:**
+    ```sh
+    python3 test_app.py
     ```
-2. Verifica los logs para identificar y corregir errores.
 
 ## 4. Distribución y Documentación
 
 ### 4.1 Preparar para la Distribución
-1. Crea un archivo `requirements.txt`:
+
+1. **Crear un archivo `requirements.txt`:**
     ```sh
     pip freeze > requirements.txt
     ```
-2. Crea un script de despliegue (`deploy.sh`):
+
+2. **Crear un script de despliegue (`deploy.sh`):**
     ```sh
     #!/bin/bash
     source myenv/bin/activate
@@ -222,69 +238,67 @@
     ```
 
 ### 4.2 Documentación Técnica
-1. Documenta la aplicación, el diseño y la estructura de archivos en un archivo `README.md`.
-2. Incluye instrucciones claras sobre cómo clonar y ejecutar el proyecto.
 
-### 4.3 Ejemplo de Documentación Técnica
-```markdown
-# Aplicación Flask
+1. **Crear un archivo `README.md`:**
+    ```markdown
+    # Aplicación Flask
 
-## Descripción
-Esta es una aplicación web simple construida con Flask. Incluye una ruta para mostrar un mensaje de bienvenida y un formulario para ingresar un nombre y registrar ese nombre en una base de datos MySQL.
+    ## Descripción
+    Esta es una aplicación web simple construida con Flask. Incluye una ruta para mostrar un mensaje de bienvenida y un formulario para ingresar un nombre y registrar ese nombre en una base de datos MySQL.
 
-## Requisitos
-- Python 3
-- Flask
-- PyMySQL
+    ## Requisitos
+    - Python 3
+    - Flask
+    - PyMySQL
 
-## Instalación
-1. Clona el repositorio:
-    ```sh
-    git clone <url-del-repositorio>
-    cd <nombre-del-repositorio>
+    ## Instalación
+    1. Clona el repositorio:
+        ```sh
+        git clone <url-del-repositorio>
+        cd <nombre-del-repositorio>
+        ```
+    2. Crea y activa un entorno virtual:
+        ```sh
+        python3 -m venv myenv
+        source myenv/bin/activate
+        ```
+    3. Instala las dependencias:
+        ```sh
+        pip install -r requirements.txt
+        ```
+
+    ## Ejecución
+    1. Ejecuta la aplicación:
+        ```sh
+        python app.py
+        ```
+    2. Visita la aplicación en tu navegador en `http://<tu-instancia
+
+-public-ip>:8080/`.
+
+    ## Pruebas
+    1. Ejecuta los casos de prueba:
+        ```sh
+        python test_app.py
+        ```
+
+    ## Despliegue
+    1. Usa el script de despliegue para preparar el entorno:
+        ```sh
+        ./deploy.sh
+        ```
+
+    ## Contribución
+    1. Crea una rama para tu característica (`git checkout -b feature/nueva-caracteristica`).
+    2. Haz commit de tus cambios (`git commit -am 'Añadir nueva característica'`).
+    3. Empuja la rama (`git push origin feature/nueva-caracteristica`).
+    4. Abre un Pull Request.
     ```
-2. Crea y activa un entorno virtual:
-    ```sh
-    python3 -m venv myenv
-    source myenv/bin/activate
-    ```
-3. Instala las dependencias:
-    ```sh
-    pip install -r requirements.txt
-    ```
 
-## Ejecución
-1. Ejecuta la aplicación:
-    ```sh
-   
+## 5. Entrega
 
- python app.py
-    ```
-2. Visita la aplicación en tu navegador en `http://<tu-instancia-public-ip>`.
-
-## Pruebas
-1. Ejecuta los casos de prueba:
-    ```sh
-    python test_app.py
-    ```
-
-## Despliegue
-1. Usa el script de despliegue para preparar el entorno:
-    ```sh
-    ./deploy.sh
-    ```
-
-## Contribución
-1. Crea una rama para tu característica (`git checkout -b feature/nueva-caracteristica`).
-2. Haz commit de tus cambios (`git commit -am 'Añadir nueva característica'`).
-3. Empuja la rama (`git push origin feature/nueva-caracteristica`).
-4. Abre un Pull Request.
-```
-
-## Entrega
-
-1. Crea un repositorio en GitHub.
-2. Agrega y sube los archivos al repositorio:
+1. **Crea un repositorio en GitHub.**
+2. **Agrega y sube los archivos al repositorio:**
     ```sh
     git init
     git add .
@@ -292,9 +306,10 @@ Esta es una aplicación web simple construida con Flask. Incluye una ruta para m
     git remote add origin <url-de-tu-repositorio>
     git push -u origin master
     ```
-3. Pega el enlace del repositorio en la entrega del examen.
+3. **Pega el enlace del repositorio en la entrega del examen.**
 
 ### Notas Adicionales
+
 - Asegúrate de que tu base de datos RDS esté configurada para permitir conexiones desde la IP de tu instancia EC2.
 - Añade configuraciones de seguridad adicionales según las mejores prácticas de AWS para proteger tu aplicación y base de datos.
 - Incluye instrucciones claras en el README sobre cómo clonar y ejecutar tu proyecto para que otros desarrolladores puedan replicar tu entorno fácilmente.
