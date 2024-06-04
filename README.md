@@ -1,3 +1,5 @@
+[EXAMEN](https://github.com/jpiedramacas/Modulo2/blob/main/Examen_Practico%20_Modulo2.docx)
+
 
 ### Paso 1: Configuración de una Instancia EC2 en AWS con Amazon Linux
 
